@@ -5,16 +5,7 @@ import (
 	"image/color"
 )
 
-type Settings struct {
-	Filter [][]float32
-}
-
-type Dither struct {
-	Type string
-	Settings
-}
-
-func (dither Dither) Color(input image.Image, errorMultiplier float32) image.Image {
+func Color(m *Matrix, input image.Image, errorMultiplier float32) image.Image {
 	bounds := input.Bounds()
 	img := image.NewRGBA(bounds)
 	for x := bounds.Min.X; x < bounds.Dx(); x++ {
@@ -23,7 +14,7 @@ func (dither Dither) Color(input image.Image, errorMultiplier float32) image.Ima
 			img.Set(x, y, pixel)
 		}
 	}
-	dx, dy := img.Bounds().Dx(), img.Bounds().Dy()
+	dx, dy := bounds.Dx(), bounds.Dy()
 
 	// Prepopulate multidimensional slices
 	redErrors   := make([][]float32, dx)
@@ -74,17 +65,18 @@ func (dither Dither) Color(input image.Image, errorMultiplier float32) image.Ima
 			img.Set(x, y, color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
 
 			// Diffuse error in two dimension
-			ydim := len(dither.Filter) - 1
-			xdim := len(dither.Filter[0]) / 2
+			ydim := m.Rows() - 1
+			xdim := m.Cols() / 2
 			for xx := 0; xx < ydim + 1; xx++ {
 				for yy := -xdim; yy <= xdim - 1; yy++ {
 					if y + yy < 0 || dy <= y + yy || x + xx < 0 || dx <= x + xx {
 						continue
 					}
 					// Adds the error of the previous pixel to the current pixel
-					redErrors[x+xx][y+yy] 	+= qrr * dither.Filter[xx][yy + ydim]
-					greenErrors[x+xx][y+yy] += qrg * dither.Filter[xx][yy + ydim]
-					blueErrors[x+xx][y+yy] 	+= qrb * dither.Filter[xx][yy + ydim]
+					factor := m.Get(yy+ydim, xx)
+					redErrors[x+xx][y+yy] 	+= qrr * factor
+					greenErrors[x+xx][y+yy] += qrg * factor
+					blueErrors[x+xx][y+yy] 	+= qrb * factor
 				}
 			}
 		}
