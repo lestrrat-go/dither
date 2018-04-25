@@ -230,17 +230,3 @@ func _main() error {
 	fmt.Printf("Rendered in: %.2fs\n", since.Seconds())
 	return nil
 }
-
-// Output the resulting image
-func generateOutput(f *dither.Filter, img image.Image, exportDir string) {
-	output, err := os.Create(filepath.Join(exportDir, f.Name()+".png"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer output.Close()
-
-	err = png.Encode(output, img)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
