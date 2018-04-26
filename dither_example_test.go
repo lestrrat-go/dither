@@ -4,6 +4,8 @@ import (
 	"image"
 	"image/png"
 	"os"
+
+	"github.com/lestrrat-go/dither"
 )
 
 func Example() {
