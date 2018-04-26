@@ -213,11 +213,11 @@ func _main() error {
 			defer wg.Done()
 
 			if exportMono {
-				outputMono := dither.Monochrome(filter.Matrix(), img, float32(multiplier))
+				outputMono := dither.Monochrome(filter, img, float32(multiplier))
 				writePNG(outputMono, filepath.Join(exportDirs[0], filter.Name()+".png"))
 			}
 			if exportColor {
-				outputColor := dither.Color(filter.Matrix(), img, float32(multiplier))
+				outputColor := dither.Color(filter, img, float32(multiplier))
 				writePNG(outputColor, filepath.Join(exportDirs[1], filter.Name()+".png"))
 			}
 		}(filter)

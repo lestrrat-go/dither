@@ -19,7 +19,7 @@ func Example() {
     return
   }
 
-  ditheredImg := dither.Monochrome(dither.Burkes.Matrix(), 1.18)
+  ditheredImg := dither.Monochrome(dither.Burkes, img, 1.18)
 
   png.Encode(os.Stdout, ditheredImg)
 }

@@ -42,7 +42,7 @@ func Grayscale(input image.Image) *image.Gray {
 	return gray
 }
 
-func Color(m *Matrix, input image.Image, errorMultiplier float32) image.Image {
+func Color(m Matrixer, input image.Image, errorMultiplier float32) image.Image {
 	bounds := input.Bounds()
 	img := image.NewRGBA(bounds)
 	for x := bounds.Min.X; x < bounds.Dx(); x++ {
@@ -68,6 +68,10 @@ func Color(m *Matrix, input image.Image, errorMultiplier float32) image.Image {
 		}
 	}
 
+	// Diffuse error in two dimension
+	matrix := m.Matrix()
+	ydim := matrix.Rows() - 1
+	xdim := matrix.Cols() / 2
 	var qrr, qrg, qrb float32
 	for x := 0; x < dx; x++ {
 		for y := 0; y < dy; y++ {
@@ -101,16 +105,13 @@ func Color(m *Matrix, input image.Image, errorMultiplier float32) image.Image {
 			}
 			img.Set(x, y, color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
 
-			// Diffuse error in two dimension
-			ydim := m.Rows() - 1
-			xdim := m.Cols() / 2
 			for xx := 0; xx < ydim+1; xx++ {
 				for yy := -xdim; yy <= xdim-1; yy++ {
 					if y+yy < 0 || dy <= y+yy || x+xx < 0 || dx <= x+xx {
 						continue
 					}
 					// Adds the error of the previous pixel to the current pixel
-					factor := m.Get(yy+ydim, xx)
+					factor := matrix.Get(yy+ydim, xx)
 					redErrors[x+xx][y+yy] += qrr * factor
 					greenErrors[x+xx][y+yy] += qrg * factor
 					blueErrors[x+xx][y+yy] += qrb * factor
@@ -121,7 +122,7 @@ func Color(m *Matrix, input image.Image, errorMultiplier float32) image.Image {
 	return img
 }
 
-func Monochrome(m *Matrix, input image.Image, errorMultiplier float32) image.Image {
+func Monochrome(m Matrixer, input image.Image, errorMultiplier float32) image.Image {
 	bounds := input.Bounds()
 	img := image.NewGray(bounds)
 	for x := bounds.Min.X; x < bounds.Dx(); x++ {
@@ -135,8 +136,9 @@ func Monochrome(m *Matrix, input image.Image, errorMultiplier float32) image.Ima
 	// Prepopulate multidimensional slice
 	errors := NewMatrix(dx, dy)
 
-	ydim := m.Rows() - 1
-	xdim := m.Cols() / 2
+	matrix := m.Matrix()
+	ydim := matrix.Rows() - 1
+	xdim := matrix.Cols() / 2
 	for x := 0; x < dx; x++ {
 		for y := 0; y < dy; y++ {
 			pix := float32(img.GrayAt(x, y).Y)
@@ -162,7 +164,7 @@ func Monochrome(m *Matrix, input image.Image, errorMultiplier float32) image.Ima
 					}
 					// Adds the error of the previous pixel to the current pixel
 					prev := errors.Get(x+xx, y+yy)
-					delta := quantError * m.Get(yy+ydim, xx)
+					delta := quantError * matrix.Get(yy+ydim, xx)
 					errors.Set(x+xx, y+yy, prev+delta)
 				}
 			}
